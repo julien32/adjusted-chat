@@ -13,3 +13,7 @@ public struct DraftMessage {
     public let replyMessage: ReplyMessage?
     public let createdAt: Date
 }
+
+public func createDraftMessageForShareView(_ message : String) -> DraftMessage {
+    return DraftMessage(id: UUID().uuidString, text: message, medias: [Media](), recording: nil, replyMessage: nil, createdAt: Date())
+}

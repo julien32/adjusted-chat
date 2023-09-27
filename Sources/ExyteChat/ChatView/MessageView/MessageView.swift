@@ -12,6 +12,8 @@ struct MessageView: View {
     @Environment(\.chatTheme) private var theme
 
     @ObservedObject var viewModel: ChatViewModel
+    
+    let deepLinks = DeepLinks.deepLinks
 
     let message: Message
     let positionInGroup: PositionInGroup
@@ -106,8 +108,14 @@ struct MessageView: View {
             }
 
             if !message.text.isEmpty {
-                textWithTimeView(message)
-                    .font(Font(font))
+//                DeepLinks.deepLinks.checkDeepLink(message.text)
+                if deepLinks.checkIfDeepLink(message.text) {
+                    DeepLinks.deepLinks.createDeepLinkView(message.text)
+                        .padding()
+                } else {
+                    textWithTimeView(message)
+                        .font(Font(font))
+                }
             }
 
             if let recording = message.recording {
@@ -291,3 +299,57 @@ struct MessageView_Preview: PreviewProvider {
     }
 }
 #endif
+
+public enum SpecificMessageType : String {
+    case playerDetails
+    case tournamentDetails
+    case detailedEvent
+    case newsArticle
+    case privateTippingGame
+    case officialTippingGame
+    case none
+}
+
+public class DeepLinks {
+    public static let deepLinks = DeepLinks()
+    
+    private var url = "scorego://"
+    private var firstQuery = "?id="
+    private var test = ""
+    
+    public func checkIfDeepLink(_ link : String) -> Bool {
+        return link.contains(url)
+    }
+    
+    public func getDeepLinkType(_ link : String) -> SpecificMessageType {
+        guard let startIndex = link.range(of: "scorego://")?.upperBound,
+              let endIndex = link.range(of: "?")?.lowerBound else {
+            return .none
+        }
+            
+            let extractedText = String(link[startIndex..<endIndex])
+        
+        if let type = SpecificMessageType(rawValue: extractedText) {
+            return type
+        } else {
+            return .none
+        }
+    }
+    
+    public func getTitleOfQueryString(_ link : String) -> String {
+        guard let startIndex = link.range(of: "title=")?.upperBound else {
+            return ""
+        }
+        
+        return String(link[startIndex..<link.endIndex])
+    }
+    
+    func createDeepLinkView(_ link : String) -> Link<Text> {
+        
+        return Link(destination: URL(string: link)!, label: {
+            Text(getTitleOfQueryString(link))
+                .fontWeight(.bold)
+                .font(.title3)
+        })
+    }
+}
