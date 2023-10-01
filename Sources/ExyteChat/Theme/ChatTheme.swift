@@ -65,7 +65,7 @@ public struct ChatTheme {
             errorStatus: Color = Color.red,
             inputLightContextBackground: Color = Color(hex: "F2F3F5"),
             inputDarkContextBackground: Color = Color(hex: "F2F3F5").opacity(0.12),
-            mainBackground: Color = .white,
+            mainBackground: Color = Color("background"),
             buttonBackground: Color = Color(hex: "989EAC"),
             addButtonBackground: Color = Color(hex: "#4F5055"),
             sendButtonBackground: Color = Color(hex: "#4962FF"),

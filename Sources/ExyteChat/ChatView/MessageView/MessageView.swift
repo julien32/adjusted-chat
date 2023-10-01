@@ -114,7 +114,6 @@ struct MessageView: View {
                         .padding()
                 } else {
                     textWithTimeView(message)
-                        .font(Font(font))
                 }
             }
 
@@ -314,11 +313,12 @@ public class DeepLinks {
     public static let deepLinks = DeepLinks()
     
     private var url = "scorego://"
+    private var news = "tennis-infinity"
     private var firstQuery = "?id="
     private var test = ""
     
     public func checkIfDeepLink(_ link : String) -> Bool {
-        return link.contains(url)
+        return link.contains(url) || link.contains(news)
     }
     
     public func getDeepLinkType(_ link : String) -> SpecificMessageType {
@@ -338,18 +338,51 @@ public class DeepLinks {
     
     public func getTitleOfQueryString(_ link : String) -> String {
         guard let startIndex = link.range(of: "title=")?.upperBound else {
-            return ""
+            return link
         }
         
         return String(link[startIndex..<link.endIndex])
     }
     
-    func createDeepLinkView(_ link : String) -> Link<Text> {
+    @ViewBuilder
+    func createDeepLinkView(_ link : String) -> some View {
         
-        return Link(destination: URL(string: link)!, label: {
-            Text(getTitleOfQueryString(link))
-                .fontWeight(.bold)
-                .font(.title3)
+        Link(destination: URL(string: link)!, label: {
+            VStack {
+                if getDeepLinkType(link) == .playerDetails {
+                    if let startIndex = link.range(of: "id=")?.upperBound, let endIndex = link.range(of: "&")?.lowerBound {
+                        let playerId = String(link[startIndex..<endIndex])
+                        CachedAsyncImage(url: URL(string: "https://api.sofascore.app/api/v1/team/\(playerId)/image"), urlCache: .imageCache) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Image(systemName: "person.crop.circle")
+                                .resizable()
+                        }
+                        .frame(width: 50, height: 50)
+                        .clipShape(Circle())
+                    }
+                } else if getDeepLinkType(link) == .tournamentDetails {
+                    if let startIndex = link.range(of: "id=")?.upperBound, let endIndex = link.range(of: "&")?.lowerBound {
+                        let tournamentId = String(link[startIndex..<endIndex])
+                        CachedAsyncImage(url: URL(string: "https://api.sofascore.app/api/v1/unique-tournament/\(tournamentId)/image"), urlCache: .imageCache) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Image(systemName: "person.crop.circle")
+                                .resizable()
+                        }
+                        .frame(width: 50, height: 50)
+                        .clipShape(Circle())
+                    }
+                }
+                
+                Text(getTitleOfQueryString(link))
+                    .fontWeight(.bold)
+                    .font(.title3)
+            }
         })
     }
 }
